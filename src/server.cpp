@@ -1,108 +1,136 @@
-#include "server.hpp"
-#include <unistd.h>
+#include "http_server.h"
+#include <unistd.c>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <cstring>
 #include <iostream>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
-constexpr int MAX_EVENTS = 10000;
-constexpr int BUFFER_SIZE = 4096;
+HttpServer::HttpServer(int port) : port(port), server_fd(-1),
+							epoll_fd(-1), running(false) {}
 
-Epoll_Server::Epoll_Server(int port) {
-	setup_server_socket(port);
+HttpServer::~HttpServer() {
+	if (server_fd != -1) close(server_fd);
+	if (epoll_fd != -1) close(epoll_fd);
+}
+
+void HttpServer::setup_server() {
+
+	// Create socket
+	server_fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+	if (server_fd == -1) {
+				throw std::runtime_error("Failed to create socket: " + 
+						std::string(strerror(errno)));
+	}
+
+	int opt = 1;
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) {
+				throw std::runtime_error("Failed to set socket options: " + 
+						std::string(strerror(errno)));
+	}
+
+	// Bind socket
+	struct sockaddr_in address;
+	memset(&address, 0, sizeof(address));
+	address.sin_family = AF_INET;
+	address.sin_addr s_addr = INADDR_ANY;
+	address.sin_port = htons(port);
+
+	if (bind(server_fd, (struct sockaddr*)& address, sizeof(address)) < 0) {
+			throw std::runtime_error("Failed to bind socket: " + 
+					std::string(strerror(errno));
+	}
+
+	if (listen(server_fd, 128) < 0) {
+
+			throw std::runtime_error("Failed to listen on socket: " + 
+					std::string(sterror(errno));
+	}
+
 	epoll_fd = epoll_create(0);
-	epoll_event ev;
-	ev.events = EPOLLIN;
-	ev.data.fd = socket_listen;
-	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_listen, &ev);
-}
-
-Epoll_Server::~Epoll_Server() {
-	close(socket_listen);
-	close(epoll_fd);
-}
-
-void Epoll_Server::setup_server_socket(int port)
-{
-	socket_listen = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-	sockaddr_in addr = {};
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	addr.sin_addr.s_addr = INADDR_ANY;
-  bind(socket_listen, (sockaddr*)&addr, sizeof(addr));
-	listen(socket_listen, SOMAXCONN);
-
-	std::cout << "Listening to incoming connections ..." << " \n";
-}
-
-void Epoll_Server::run() {
-
-	epoll_event events[MAX_EVENTS];
-
-	while (true) {
-		int n = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
-		for (int i =0; i < n; i++) {
-			if (events[i].data.fd == socket_listen) {
-					handle_new_connection();
-			} else {
-				handle_client_data(events[i].data.fd);
-			}
-			}
+	if (epoll_fd == -1) {
+			throw std::runtime_error("Failed to create epoll instance: " +
+					std::string(strerror(errno));
 	}
-}
 
-void Epoll_Server::handle_new_connection()
-{
+	struct epoll_event event;
+	event.events = EPOLL_IN;
+	event.data.fd = server_fd;
 	
-	sockaddr_in client_addr;
-	socklen_t client_len = sizeof(client_addr);
-	int client_fd = accept4(socket_listen, (sockaddr*)&client_addr, &client_len, SOCK_NONBLOCK);
-	if (client_fd > 0) {
-			epoll_event ev;
-			ev.events = EPOLLIN | EPOLLET;
-			ev.data.fd = client_fd;
-			epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &ev);
-			client_buffers[client_fd] = "";
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, server_fd, &event) == -1)
+	{
+		 throw std::runtime_error("Failed to add server socket to epoll: " +
+				 std::string(strerror(errno)));
+	}
 	}
 
-}
+	void httpServer::run() {
+		setup_server();
+		running = true;
 
-void Epoll_Server::handle_client_data(int client_fd)
-{
-	char buffer[BUFFER_SIZE];
-	int count = read(client_fd, buffer, BUFFER_SIZE);
-	if (count <= 0) {
-			remove_client(client_fd);
-			return;
+		struct epoll_event events[64];
+		std::cout << "Server running on port " << port << std::endl;
+
+		while (running) {
+				
+				int num_events  = epoll_wait(epoll_fd, events, 64 - 1);
+				if (num_events == -1) {
+							if (errno == EINTR) continue;
+							throw std::runtime_error("epoll_wait failed: " +
+									std::string(sterror(errno)));
+				}
+
+				for (int  i = 0; i < num_events; i++) {
+							if (events[i].data.fd == server_fd) {
+									struct sockaddr_in client_addr;
+									socklent_t client_len = sizeof(client_addr);
+									int client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &client_len);
+									if (client_fd == -1) {
+											continue;
+									}
+
+									// Make client non blocking
+									int flags =fcntl(client_fd, FGETFL, 0);
+									fcntl(client_fd, F_SETFL, flags | O_NONBLOCK);
+
+									struct epoll_event client_event;
+									client_event.events = EPOLLIN | EPOLLET;
+									client_event.data.fd = client_fd;
+									
+									if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, cliet_fd, &client_event) == -1) {
+											close(client_fd);
+											continue;
+									}
+							} else {
+									
+									handle_connection(events[i].data.fd);
+							}
+				}
+		}
+	
 	}
-	client_buffers[client_fd].append(buffer, count);
-	send_response(client_fd, "ACK: " + client_buffers[client_fd]);
-	client_buffers[client_fd].clear();
-}
 
-void Epoll_Server::remove_client(int client_fd) {
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, client_fd, nullptr);
-		close(client_fd);
-		client_buffers.erase(client_fd);
-}
+	void HttpServer::handle_connection(int client_fd) {
+			char buffer[4096];
+			ssize_t bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
 
-void Epoll_Server::send_response(int client_fd, const std::string& message)
-{
-	send(client_fd, message.c_str(), message.length(), 0);
-}
+			if (bytes_read <= 0) {
+					close(client_fd);
+					return;
+			}
 
+			buffer[bytes_read] = '\0';
+			std::string request_str(buffer);
 
+			std::string response = "HTTP/1.1 200 Ok\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nAutobots, rollout!";
+			send(client_fd, response.c_str(), response.size(), 0);
+			close(client_fd);
+	}
 
-
-
-
-
-
-
-
-
-
+	void HttpServer::stop() {
+			running = false;
+	}
 
 
 

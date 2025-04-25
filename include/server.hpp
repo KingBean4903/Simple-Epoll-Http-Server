@@ -1,38 +1,28 @@
-#ifndef EPOLL_SERVER_HPP
-#define EPOLL_SERVER_HPP
+#pragma once
 
 #include <string>
 #include <functional>
 #include <sys/epoll.h>
-#include <netinet/in.h>
-#include <unordered_map>
-#include <string>
-#include <vector>
 
-#define SOCKET int
 
-class Epoll_Server {
+class HttpServer {
 		
 	public: 
-		Epoll_Server(int port);
-		~Epoll_Server();
+		HttpServer(int port);
+		~HttpServer();
 		void run();
+		void stop();
+		void on_request(std::function<void(int, const std::string&)> handler);
 
 	private:
-		SOCKET socket_listen;
+		int server_fd;
 		int epoll_fd;
-
-		std::unordered_map<int, std::string> client_buffers;
-		void handle_new_connection();
-		void setup_server_socket(int port);
-		void handle_client_data(int client_fd);
-		void remove_client(int client_fd);
-		void send_response(int client_fd, const std::string& message);
+		int port;
+		bool running;
+		void setup_server();
+		void handle_connection(int client_fd);
 
 };
-
-#endif
-
 
 
 
