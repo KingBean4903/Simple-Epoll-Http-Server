@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/http_server.dir/src/http_request.cpp.o CMakeFiles/http_server.dir/src/http_response.cpp.o CMakeFiles/http_server.dir/src/main.cpp.o CMakeFiles/http_server.dir/src/router.cpp.o CMakeFiles/http_server.dir/src/server.cpp.o  -o http_server   -L/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/nlohmann_json::nlohmann_json 

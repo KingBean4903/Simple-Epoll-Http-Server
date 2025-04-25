@@ -1,0 +1,11 @@
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/CMakeFiles/rebuild_cache.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/CMakeFiles/test_server.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/CMakeFiles/edit_cache.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/CMakeFiles/test.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/CMakeFiles/http_server.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/_deps/json-build/CMakeFiles/edit_cache.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/_deps/json-build/CMakeFiles/test.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/_deps/json-build/CMakeFiles/rebuild_cache.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/_deps/catch2-build/CMakeFiles/edit_cache.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/_deps/catch2-build/CMakeFiles/test.dir
+/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/include/_deps/catch2-build/CMakeFiles/rebuild_cache.dir

@@ -1,3 +1,0 @@
-/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/build/CMakeFiles/rebuild_cache.dir
-/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/build/CMakeFiles/edit_cache.dir
-/home/baimungi/Documents/C_STUDIES/Simple_Epoll_Server/build/CMakeFiles/epoll_server.dir
